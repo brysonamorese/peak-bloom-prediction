@@ -42,3 +42,96 @@ pairs(cherry[, c("bloom_doy", "lat", "long", "alt", "year")])
 ```
 
 
+```{r}
+#baseline prediction for 2026 based on historical trends
+library(dplyr)
+library(ggplot2)
+
+# Linear trend per location
+lm_trends <- cherry %>%
+  group_by(location) %>%
+  do(fit = lm(bloom_doy ~ year, data = .))
+
+# Predict for 2026
+predictions <- lm_trends %>%
+  rowwise() %>%
+  mutate(pred_2026 = predict(fit, newdata = data.frame(year = 2026)))
+predictions
+
+```
+
+```{r}
+#Random Forrest prediction
+
+
+library(randomForest)
+
+# Make location a factor
+cherry$location <- as.factor(cherry$location)
+
+# Optionally, include latitude, longitude, altitude
+rf_model <- randomForest(bloom_doy ~ year + location + lat + long + alt,
+                         data = cherry,
+                         ntree = 500)
+
+# Predict for 2026
+new_data <- data.frame(
+  year = 2026,
+  location = levels(cherry$location),
+  lat = c(38.89, 47.48, 35.01, 49.22, 40.73), # example
+  long = c(-77.03, 7.74, 135.67, -123.16, -73.99),
+  alt = c(0, 450, 50, 24, 10)
+)
+
+
+
+# In your new data, match the levels exactly
+new_data$location <- factor(new_data$location, levels = levels(cherry$location))
+
+predict(rf_model, newdata = new_data)
+
+```
+
+
+
+```{r}
+library(randomForest)
+
+#another random forrest example
+
+# Make location a factor in your training data
+cherry$location <- as.factor(cherry$location)
+
+# Fit the Random Forest
+rf_model <- randomForest(
+  bloom_doy ~ year + location + lat + long + alt,
+  data = cherry,
+  ntree = 500
+)
+
+# Prepare new data for 2026
+new_data <- data.frame(
+  year = rep(2026, 5),
+  location = c("washingtondc", "liestal", "kyoto", "vancouver", "newyorkcity"),
+  lat = c(38.89, 47.48, 35.01, 49.22, 40.73),
+  long = c(-77.03, 7.74, 135.67, -123.16, -73.99),
+  alt = c(0, 450, 50, 24, 10)
+)
+
+# Make sure 'location' is a factor with the same levels as training data
+new_data$location <- factor(new_data$location, levels = levels(cherry$location))
+
+# Predict
+predictions_doy <- predict(rf_model, newdata = new_data)
+predictions_doy
+
+# Convert to calendar dates
+doy_to_date <- function(year, doy) {
+  as.Date(doy - 1, origin = paste0(year, "-01-01"))
+}
+
+predictions_date <- doy_to_date(2026, predictions_doy)
+predictions_date
+
+```
+
