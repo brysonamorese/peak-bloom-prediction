@@ -20,6 +20,7 @@ str(cherry)
 summary(cherry)
 
 ```
+
 ```{r}
 library(ggplot2)
 
@@ -29,6 +30,7 @@ ggplot(cherry, aes(x = year, y = bloom_doy, color = location)) +
   labs(title = "Peak bloom trends over time", y = "Day of Year", x = "Year")
 
 ```
+
 ```{r}
 ggplot(cherry, aes(x = bloom_doy)) +
   geom_histogram(bins = 30, fill = "lightblue") +
