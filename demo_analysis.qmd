@@ -323,16 +323,10 @@ To use the web API, you first need a web service token.
 You can request this token (free of charge) via <https://www.ncdc.noaa.gov/cdo-web/token>.
 Once you have been issued the token, note it somewhere in your code (or make it available through an environment variable):
 
-```{r}
-#| eval: false
-NOAA_WEB_API_TOKEN <- '...'
-# or
-NOAA_WEB_API_TOKEN <- Sys.getenv("NOAA_WEB_API_TOKEN")
-```
 
 ```{r}
-#| echo: false
-NOAA_WEB_API_TOKEN <- Sys.getenv("NOAA_WEB_API_TOKEN")
+NOAA_WEB_API_TOKEN <- "DEMaWgMzsTdgVCAbnKWtfkJgWQtCNyLR"
+
 ```
 
 
@@ -424,6 +418,12 @@ get_daily_avg_temp <- function(station_id, start_date, end_date,
       })
   })
   
+ #batches |>
+  #purrr::compact() |>                     # REMOVE NULLs
+# purrr::map(\(x) nested_to_tibble(x$results)) |>
+ # list_rbind() |>
+ # mutate(date = as_date(date))
+
   map(batches, \(x) nested_to_tibble(x$results)) |> 
     list_rbind() |> 
     mutate(date = as_date(date))
@@ -434,7 +434,7 @@ get_daily_avg_temp <- function(station_id, start_date, end_date,
 #| cache: true
 historic_temperatures <- cherry |> 
   group_by(location) |> 
-  summarize(start_date = sprintf('%d-01-01', pmax(1970, min(year)) - 1)) |> 
+  summarize(start_date = sprintf('%d-01-01', pmax(1970, min(year) - 1)))|> 
   left_join(tibble(location = names(stations),
                    station_id = stations),
             by = 'location') |> 
@@ -446,6 +446,9 @@ historic_temperatures <- cherry |>
                        api_key = NOAA_WEB_API_TOKEN,
                        base_url = NOAA_API_BASE_URL)
   })
+
+
+
 ```
 
 ```{r}
